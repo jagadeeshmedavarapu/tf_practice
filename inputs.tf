@@ -17,6 +17,6 @@ variable "subnet_name_tags" {
 
 variable "bucket_name" {
     type    = string
-    default = "qts3khajatf3example1"
+    default = "qts3khajatf3example"
 
 } 
