@@ -14,6 +14,10 @@ resource "aws_subnet" "subnets" {
     } 
     availability_zone = format("${var.region}%s", count.index%2==0?"a":"b")
     vpc_id          = aws_vpc.ntier.id 
+
+    depends_on = [
+      aws_vpc.ntier
+    ]
 }
 
 
@@ -22,7 +26,10 @@ resource "aws_internet_gateway" "ntier_igw" {
     tags            = {
         Name        = "ntier-igw"
     } 
-
+    depends_on = [
+      aws_vpc.ntier,
+      aws_subnet.subnets
+    ]
 }
 
 resource "aws_s3_bucket" "my_bucket" {
@@ -55,7 +62,9 @@ resource "aws_security_group" "websg" {
     tags = {
         Name            = "Web Security"
     } 
-
+    depends_on = [
+      aws_vpc.ntier
+    ]
 }
 
 resource "aws_security_group" "appsg" {
@@ -83,7 +92,9 @@ resource "aws_security_group" "appsg" {
     tags = {
         Name            = "App Security Group"
     } 
-
+    depends_on = [
+      aws_vpc.ntier
+    ]
 }
 
 resource "aws_security_group" "dbsg" {
@@ -111,7 +122,9 @@ resource "aws_security_group" "dbsg" {
     tags = {
         Name            = "db Security Group"
     } 
-
+    depends_on = [
+      aws_vpc.ntier
+    ]
 }
 
 resource "aws_route_table" "publicrt" {
@@ -123,6 +136,9 @@ resource "aws_route_table" "publicrt" {
     tags = {
       Name = "Public RT"
     }
+    depends_on = [
+      aws_internet_gateway.ntier_igw
+    ]
 }
 
 resource "aws_route_table" "privatert" {
@@ -131,12 +147,21 @@ resource "aws_route_table" "privatert" {
     tags = {
       Name = "private RT"
     }
+    depends_on = [
+      aws_internet_gateway.ntier_igw
+    ]
 }
 
+#subnet associations
 resource "aws_route_table_association" "associations" {
   count = length(aws_subnet.subnets)
   subnet_id = aws_subnet.subnets[count.index].id 
   route_table_id = contains(var.public_subnets,lookup(aws_subnet.subnets[count.index].tags_all,"Name",""))?aws_route_table.publicrt.id : aws_route_table.privatert.id
+
+depends_on = [
+  aws_route_table.publicrt,
+  aws_route_table.privatert
+]
 
 }
 
