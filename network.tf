@@ -86,6 +86,34 @@ resource "aws_security_group" "appsg" {
 
 }
 
+resource "aws_security_group" "dbsg" {
+    vpc_id              = aws_vpc.ntier.id
+    description         = local.default_description
+    ingress {
+        from_port       = local.ssh_port
+        to_port         = local.ssh_port
+        protocol        = local.tcp
+        cidr_blocks     = [local.any_where]
+    } 
+    ingress {
+        from_port       = local.db_port
+        to_port         = local.db_port
+        protocol        = local.tcp
+        cidr_blocks     = [var.network_cidr]
+    }
+    egress {
+        from_port       = local.all_ports
+        to_port         = local.all_ports
+        protocol        = local.any_protocol
+        cidr_blocks      = [local.any_where]
+        ipv6_cidr_blocks = [local.any_where_ip6]
+    }
+    tags = {
+        Name            = "db Security Group"
+    } 
+
+}
+
 resource "aws_route_table" "publicrt" {
     vpc_id = aws_vpc.ntier.id
     route {
@@ -109,6 +137,6 @@ resource "aws_route_table_association" "associations" {
   count = length(aws_subnet.subnets)
   subnet_id = aws_subnet.subnets[count.index].id 
   route_table_id = contains(var.public_subnets,lookup(aws_subnet.subnets[count.index].tags_all,"Name",""))?aws_route_table.publicrt.id : aws_route_table.privatert.id
-  
+
 }
 
