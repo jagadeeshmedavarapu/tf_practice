@@ -88,10 +88,10 @@ resource "aws_security_group" "appsg" {
 
 resource "aws_route_table" "publicrt" {
     vpc_id = aws_vpc.ntier.id
-
+    route {
     cidr_block = local.any_where
-    gatway_id = aws_internet_gateway.ntier_igw.id 
-
+    gateway_id = aws_internet_gateway.ntier_igw.id 
+    }
     tags = {
       Name = "Public RT"
     }
@@ -104,3 +104,11 @@ resource "aws_route_table" "privatert" {
       Name = "private RT"
     }
 }
+
+resource "aws_route_table_association" "associations" {
+  count = length(aws_subnet.subnets)
+  subnet_id = aws_subnet.subnets[count.index].id 
+  route_table_id = contains(var.public_subnets,lookup(aws_subnet.subnets[count.index].tags_all,"Name",""))?aws_route_table.publicrt.id : aws_route_table.privatert.id
+  
+}
+
