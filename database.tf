@@ -10,6 +10,7 @@ resource "aws_db_instance" "database" {
   
   allocated_storage    = 20
   db_name              = "qtlmsdb"
+  db_subnet_group_name = local.db_subnet_groupname
   engine               = "mysql"
   engine_version       = "8.0.28"
   instance_class       = "db.t3.micro"
