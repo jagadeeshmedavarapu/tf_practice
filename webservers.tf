@@ -9,4 +9,8 @@ resource "aws_instance" "webserver" {
     key_name                        = aws_key_pair.keypair.key_name  
     subnet_id                       = data.aws_subnets.web_subnets.ids[count.index]
     vpc_security_group_ids          = [aws_security_group.websg.id]  
+
+    depends_on = [
+      aws_instance.appserver
+    ]
 }
